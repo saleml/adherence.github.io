@@ -204,6 +204,40 @@
       font-weight: 500;
     }
 
+    .description {
+      max-width: 580px;
+      margin: 32px auto 0;
+      font-size: clamp(14px, 1.05vw, 16px);
+      line-height: 1.6;
+      color: var(--ink-dim);
+      animation: fade-up 1.8s 0.7s ease-out both;
+    }
+
+    .pipeline {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px 22px;
+      margin-top: 28px;
+      font-size: clamp(10px, 0.9vw, 12px);
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--ink-dim);
+      animation: fade-up 2s 0.9s ease-out both;
+    }
+    .pipeline span {
+      position: relative;
+      transition: color 0.3s;
+    }
+    .pipeline span:hover { color: var(--accent); }
+    .pipeline span + span::before {
+      content: "·";
+      color: var(--accent-soft);
+      margin-right: 22px;
+      margin-left: -22px;
+      opacity: 0.8;
+    }
+
     @keyframes fade-up {
       from { opacity: 0; transform: translateY(14px); }
       to   { opacity: 1; transform: translateY(0); }
@@ -312,6 +346,14 @@
     <h1 class="wordmark">adherence<span class="dot">.</span></h1>
     <div class="rule"></div>
     <p class="tagline">building <strong>fishtank</strong></p>
+    <p class="description">an agent-first workspace for designing, training, and evaluating conversational AI agents &mdash; from requirements and tests, through distillation and preference loops, to deployment.</p>
+    <nav class="pipeline" aria-label="pipeline">
+      <span>specify</span>
+      <span>test</span>
+      <span>train</span>
+      <span>evaluate</span>
+      <span>deploy</span>
+    </nav>
   </main>
 
   <footer>
