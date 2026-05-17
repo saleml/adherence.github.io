@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Adherence</title>
+  <meta name="description" content="Adherence — building FishTank.">
+  <meta name="theme-color" content="#031b2a">
+  <meta property="og:title" content="Adherence">
+  <meta property="og:description" content="Building FishTank.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://adherence.ae">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep: #02101a;
+      --bg-mid:  #062436;
+      --bg-top:  #0b3a55;
+      --accent:  #6fe5d6;
+      --accent-soft: rgba(111, 229, 214, 0.55);
+      --ink: #eaf6fb;
+      --ink-dim: rgba(234, 246, 251, 0.55);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg-deep);
+      color: var(--ink);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* layered ocean background */
+    .ocean {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 50% 110%, var(--bg-top) 0%, transparent 55%),
+        radial-gradient(ellipse at 20% 0%, rgba(111,229,214,0.07) 0%, transparent 50%),
+        linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-mid) 60%, #021a28 100%);
+      z-index: 0;
+    }
+
+    /* god rays (slow shimmer from above) */
+    .rays {
+      position: fixed;
+      inset: 0;
+      background:
+        linear-gradient(100deg, transparent 30%, rgba(111,229,214,0.05) 40%, transparent 50%),
+        linear-gradient(80deg,  transparent 50%, rgba(111,229,214,0.04) 60%, transparent 70%),
+        linear-gradient(120deg, transparent 10%, rgba(111,229,214,0.03) 22%, transparent 32%);
+      mix-blend-mode: screen;
+      animation: drift 24s ease-in-out infinite alternate;
+      z-index: 1;
+      pointer-events: none;
+    }
+    @keyframes drift {
+      from { transform: translateX(-3%) translateY(-1%); }
+      to   { transform: translateX( 3%) translateY( 1%); }
+    }
+
+    /* caustics (water surface light pattern) */
+    .caustics {
+      position: fixed;
+      inset: -10%;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(111,229,214,0.10) 0 1%, transparent 2%),
+        radial-gradient(circle at 70% 60%, rgba(111,229,214,0.08) 0 1%, transparent 2%),
+        radial-gradient(circle at 40% 80%, rgba(111,229,214,0.10) 0 1%, transparent 2%),
+        radial-gradient(circle at 85% 15%, rgba(111,229,214,0.06) 0 1%, transparent 2%);
+      filter: blur(40px);
+      opacity: 0.7;
+      animation: caustics 18s ease-in-out infinite alternate;
+      z-index: 1;
+      pointer-events: none;
+    }
+    @keyframes caustics {
+      from { transform: translate(-2%, -1%) scale(1); }
+      to   { transform: translate( 2%,  1%) scale(1.05); }
+    }
+
+    /* fish layer */
+    .school { position: fixed; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
+    .fish {
+      position: absolute;
+      opacity: 0.55;
+      will-change: transform;
+    }
+    .fish svg { display: block; }
+
+    /* each fish: own row, own speed, own size, own direction */
+    .fish.f1 { top: 18%; animation: swim-rtl 38s linear infinite; transform: scale(0.9); }
+    .fish.f2 { top: 32%; animation: swim-ltr 52s linear infinite; transform: scaleX(-1) scale(0.7); opacity: 0.4; }
+    .fish.f3 { top: 64%; animation: swim-rtl 44s linear infinite; transform: scale(1.1); animation-delay: -10s; opacity: 0.45; }
+    .fish.f4 { top: 78%; animation: swim-ltr 60s linear infinite; transform: scaleX(-1) scale(0.6); opacity: 0.35; animation-delay: -25s; }
+    .fish.f5 { top: 8%;  animation: swim-rtl 70s linear infinite; transform: scale(0.5); opacity: 0.3;  animation-delay: -40s; }
+    .fish.f6 { top: 48%; animation: swim-ltr 48s linear infinite; transform: scaleX(-1) scale(0.85); opacity: 0.5; animation-delay: -15s; }
+    .fish.f7 { top: 88%; animation: swim-rtl 34s linear infinite; transform: scale(0.7); opacity: 0.4; animation-delay: -5s; }
+
+    /* gentle bob */
+    .fish .bob {
+      animation: bob 3.6s ease-in-out infinite alternate;
+      transform-origin: center;
+    }
+    .fish.f2 .bob, .fish.f4 .bob, .fish.f6 .bob { animation-duration: 4.4s; }
+    @keyframes bob {
+      from { transform: translateY(-6px) rotate(-2deg); }
+      to   { transform: translateY( 6px) rotate( 2deg); }
+    }
+
+    @keyframes swim-rtl {
+      from { left: 110%; }
+      to   { left: -20%; }
+    }
+    @keyframes swim-ltr {
+      from { left: -20%; }
+      to   { left: 110%; }
+    }
+
+    /* tail wag */
+    .tail {
+      transform-origin: 60px 30px;
+      animation: wag 0.6s ease-in-out infinite alternate;
+    }
+    @keyframes wag {
+      from { transform: rotate(-12deg); }
+      to   { transform: rotate( 12deg); }
+    }
+
+    /* bubbles */
+    .bubbles { position: fixed; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
+    .bubble {
+      position: absolute;
+      bottom: -40px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.5), rgba(255,255,255,0.05) 60%, transparent 70%);
+      border: 1px solid rgba(255,255,255,0.15);
+      animation: rise linear infinite;
+    }
+    @keyframes rise {
+      from { transform: translateY(0) translateX(0); opacity: 0; }
+      10%  { opacity: 0.7; }
+      90%  { opacity: 0.7; }
+      to   { transform: translateY(-110vh) translateX(var(--drift, 20px)); opacity: 0; }
+    }
+
+    /* foreground content */
+    main {
+      position: relative;
+      z-index: 10;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0 24px;
+    }
+
+    .wordmark {
+      font-family: 'Fraunces', Georgia, serif;
+      font-weight: 300;
+      font-size: clamp(54px, 12vw, 168px);
+      letter-spacing: 0.06em;
+      line-height: 1;
+      color: var(--ink);
+      text-shadow: 0 2px 30px rgba(0,0,0,0.4);
+      animation: fade-up 1.4s ease-out both;
+    }
+
+    .wordmark .dot {
+      color: var(--accent);
+      display: inline-block;
+      animation: pulse 3s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 0.6; transform: translateY(0); }
+      50%     { opacity: 1.0; transform: translateY(-4px); }
+    }
+
+    .rule {
+      width: 60px;
+      height: 1px;
+      background: var(--accent-soft);
+      margin: 28px 0 22px;
+      animation: fade-up 1.6s 0.3s ease-out both;
+    }
+
+    .tagline {
+      font-size: clamp(13px, 1.4vw, 16px);
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--ink-dim);
+      animation: fade-up 1.6s 0.5s ease-out both;
+    }
+    .tagline strong {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    footer {
+      position: fixed;
+      bottom: 22px;
+      left: 0; right: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 28px;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-dim);
+      animation: fade-in 2s 1s ease-out both;
+    }
+    footer a {
+      color: var(--ink-dim);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    footer a:hover { color: var(--accent); }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+    @media (max-width: 520px) {
+      footer { font-size: 10px; padding: 0 18px; }
+      .tagline { letter-spacing: 0.2em; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .rays, .caustics, .fish, .bubble, .wordmark .dot, .tail, .bob { animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="ocean"></div>
+  <div class="caustics"></div>
+  <div class="rays"></div>
+
+  <!-- swimming fish silhouettes -->
+  <div class="school" aria-hidden="true">
+    <div class="fish f1"><div class="bob">
+      <svg width="140" height="60" viewBox="0 0 140 60" fill="none">
+        <path d="M10 30 Q40 5 90 30 Q40 55 10 30 Z" fill="#6fe5d6" opacity="0.55"/>
+        <path class="tail" d="M90 30 L120 12 L120 48 Z" fill="#6fe5d6" opacity="0.55"/>
+        <circle cx="80" cy="26" r="2" fill="#02101a"/>
+      </svg>
+    </div></div>
+
+    <div class="fish f2"><div class="bob">
+      <svg width="110" height="48" viewBox="0 0 140 60" fill="none">
+        <path d="M10 30 Q40 5 90 30 Q40 55 10 30 Z" fill="#9ff0e3" opacity="0.5"/>
+        <path class="tail" d="M90 30 L120 12 L120 48 Z" fill="#9ff0e3" opacity="0.5"/>
+        <circle cx="80" cy="26" r="2" fill="#02101a"/>
+      </svg>
+    </div></div>
+
+    <div class="fish f3"><div class="bob">
+      <svg width="170" height="74" viewBox="0 0 140 60" fill="none">
+        <path d="M10 30 Q40 5 90 30 Q40 55 10 30 Z" fill="#6fe5d6" opacity="0.5"/>
+        <path class="tail" d="M90 30 L120 12 L120 48 Z" fill="#6fe5d6" opacity="0.5"/>
+        <circle cx="80" cy="26" r="2" fill="#02101a"/>
+      </svg>
+    </div></div>
+
+    <div class="fish f4"><div class="bob">
+      <svg width="100" height="42" viewBox="0 0 140 60" fill="none">
+        <path d="M10 30 Q40 5 90 30 Q40 55 10 30 Z" fill="#cdf6ee" opacity="0.45"/>
+        <path class="tail" d="M90 30 L120 12 L120 48 Z" fill="#cdf6ee" opacity="0.45"/>
+        <circle cx="80" cy="26" r="2" fill="#02101a"/>
+      </svg>
+    </div></div>
+
+    <div class="fish f5"><div class="bob">
+      <svg width="80" height="36" viewBox="0 0 140 60" fill="none">
+        <path d="M10 30 Q40 5 90 30 Q40 55 10 30 Z" fill="#cdf6ee" opacity="0.4"/>
+        <path class="tail" d="M90 30 L120 12 L120 48 Z" fill="#cdf6ee" opacity="0.4"/>
+        <circle cx="80" cy="26" r="1.6" fill="#02101a"/>
+      </svg>
+    </div></div>
+
+    <div class="fish f6"><div class="bob">
+      <svg width="130" height="56" viewBox="0 0 140 60" fill="none">
+        <path d="M10 30 Q40 5 90 30 Q40 55 10 30 Z" fill="#9ff0e3" opacity="0.55"/>
+        <path class="tail" d="M90 30 L120 12 L120 48 Z" fill="#9ff0e3" opacity="0.55"/>
+        <circle cx="80" cy="26" r="2" fill="#02101a"/>
+      </svg>
+    </div></div>
+
+    <div class="fish f7"><div class="bob">
+      <svg width="100" height="42" viewBox="0 0 140 60" fill="none">
+        <path d="M10 30 Q40 5 90 30 Q40 55 10 30 Z" fill="#6fe5d6" opacity="0.5"/>
+        <path class="tail" d="M90 30 L120 12 L120 48 Z" fill="#6fe5d6" opacity="0.5"/>
+        <circle cx="80" cy="26" r="2" fill="#02101a"/>
+      </svg>
+    </div></div>
+  </div>
+
+  <!-- bubbles -->
+  <div class="bubbles" aria-hidden="true" id="bubbles"></div>
+
+  <main>
+    <h1 class="wordmark">adherence<span class="dot">.</span></h1>
+    <div class="rule"></div>
+    <p class="tagline">building <strong>fishtank</strong></p>
+  </main>
+
+  <footer>
+    <span>Abu Dhabi</span>
+    <a href="mailto:hello@adherence.ae">hello@adherence.ae</a>
+  </footer>
+
+  <script>
+    // procedurally place bubbles so they don't all share timing
+    (function() {
+      const root = document.getElementById('bubbles');
+      const count = 18;
+      for (let i = 0; i < count; i++) {
+        const b = document.createElement('div');
+        b.className = 'bubble';
+        const size = 4 + Math.random() * 18;
+        b.style.width = size + 'px';
+        b.style.height = size + 'px';
+        b.style.left = (Math.random() * 100) + '%';
+        b.style.animationDuration = (10 + Math.random() * 16) + 's';
+        b.style.animationDelay = (-Math.random() * 20) + 's';
+        b.style.setProperty('--drift', ((Math.random() * 80) - 40) + 'px');
+        root.appendChild(b);
+      }
+    })();
+  </script>
+</body>
+</html>
